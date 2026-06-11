@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""llama_cpp LLM matrix: cpu, npu, hybrid."""
+"""llama_cpp LLM matrix: cpu, npu, gpu."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from _quality_data import (
 pytestmark = pytest.mark.llm
 
 
-@pytest.mark.parametrize('device_map', ['cpu', 'npu', 'hybrid'])
+@pytest.mark.parametrize('device_map', ['cpu', 'npu', 'gpu'])
 def test_generate_blocking(llama_cpp_llm_paths, device_map):
     with geniex.AutoModelForCausalLM.from_pretrained(
         LLAMA_CPP_LLM_MODEL,
@@ -59,7 +59,7 @@ def test_generate_stream(llama_cpp_llm_paths, device_map):
         assert streamer.output.text
 
 
-@pytest.mark.parametrize('device_map', ['cpu', 'npu', 'hybrid'])
+@pytest.mark.parametrize('device_map', ['cpu', 'npu', 'gpu'])
 @pytest.mark.parametrize(('prompt', 'expected'), LLM_QUALITY_PROMPTS)
 def test_quality_keywords(llama_cpp_llm_paths, device_map, prompt, expected):
     # Mirrors run_scorecard_posix.py:_section_quality_checks (test-llama.cpp):
