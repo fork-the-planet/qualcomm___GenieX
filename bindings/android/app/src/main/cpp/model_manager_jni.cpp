@@ -215,7 +215,7 @@ jobject build_model_detail(JNIEnv* env, const geniex_ModelDetail& d) {
 
 // Build a com.geniex.sdk.bean.ModelQuery from a geniex_ModelQueryOutput.
 jobject build_model_query(JNIEnv* env, const geniex_ModelQueryOutput& out) {
-    jclass       candCls     = env->FindClass("com/geniex/sdk/bean/QuantCandidate");
+    jclass       candCls     = env->FindClass("com/geniex/sdk/bean/PrecisionCandidate");
     jmethodID    candCtor    = env->GetMethodID(candCls, "<init>", "(Ljava/lang/String;JZ)V");
     jobjectArray jCandidates = env->NewObjectArray(out.candidate_count, candCls, nullptr);
     for (int32_t i = 0; i < out.candidate_count; ++i) {
@@ -236,7 +236,7 @@ jobject build_model_query(JNIEnv* env, const geniex_ModelQueryOutput& out) {
     jmethodID ctor         = env->GetMethodID(cls,
         "<init>",
         "(Ljava/lang/String;Ljava/lang/String;Lcom/geniex/sdk/bean/ModelType;"
-                "[Lcom/geniex/sdk/bean/QuantCandidate;)V");
+                "[Lcom/geniex/sdk/bean/PrecisionCandidate;)V");
 
     jstring jModelName = env->NewStringUTF(out.model_name ? out.model_name : "");
     jstring jPluginId  = env->NewStringUTF(out.plugin_id ? out.plugin_id : "");
@@ -311,7 +311,7 @@ extern "C" JNIEXPORT jint JNICALL Java_com_geniex_sdk_jni_ModelManager_pull(
     jclass cls = env->GetObjectClass(inputObj);
 
     std::string modelName   = read_opt_string(env, cls, inputObj, "model_name");
-    std::string quant       = read_opt_string(env, cls, inputObj, "quant");
+    std::string quant       = read_opt_string(env, cls, inputObj, "precision");
     std::string localPath   = read_opt_string(env, cls, inputObj, "local_path");
     std::string hfToken     = read_opt_string(env, cls, inputObj, "hf_token");
     std::string chipset     = read_opt_string(env, cls, inputObj, "chipset");
