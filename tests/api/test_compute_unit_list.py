@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""``geniex.get_device_list`` shape per plugin."""
+"""``geniex.get_compute_unit_list`` shape per runtime."""
 
 from __future__ import annotations
 
 import geniex
 
 
-def test_device_list_shape_for_each_plugin(geniex_session):
-    for plugin in geniex.get_plugin_list():
-        devices = geniex.get_device_list(plugin)
-        assert isinstance(devices, list)
-        for entry in devices:
+def test_compute_unit_list_shape_for_each_runtime(geniex_session):
+    for runtime in geniex.get_runtime_list():
+        compute_units = geniex.get_compute_unit_list(runtime)
+        assert isinstance(compute_units, list)
+        for entry in compute_units:
             assert isinstance(entry, tuple) and len(entry) == 2
-            device_id, label = entry
-            assert isinstance(device_id, str) and device_id
+            compute_unit, label = entry
+            assert isinstance(compute_unit, str) and compute_unit
             assert isinstance(label, str)
