@@ -132,10 +132,17 @@ jobs:
           # OpenCL is found via CMAKE_PREFIX_PATH (the Adreno SDK root);
           # Hexagon/HTP signing pick up HEXAGON_SDK_ROOT / HEXAGON_HTP_CERT
           # / WINDOWS_SDK_BIN from the environment set above.
+          #
+          # CMAKE_INSTALL_LIBDIR=bin collapses the install layout into a
+          # single folder: executables, the ggml/llama DLLs, and the
+          # Hexagon HTP skels + signed .cat (installed via `TYPE LIB`) all
+          # land in <prefix>/bin, so the ggml-hexagon DLL finds the skels
+          # beside it and the bundle runs out of the box.
           cmake -S $env:LLAMA_DIR --preset $Preset -B $BuildDir --log-level=VERBOSE `
             -DGGML_HEXAGON=ON `
             -DGGML_OPENCL=ON `
             -DCMAKE_PREFIX_PATH="$env:OPENCL_SDK_ROOT" `
+            -DCMAKE_INSTALL_LIBDIR=bin `
             -DCMAKE_C_COMPILER_LAUNCHER=ccache `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           if ($LASTEXITCODE -ne 0) { throw "cmake configure failed: $LASTEXITCODE" }
@@ -143,19 +150,21 @@ jobs:
           cmake --build $BuildDir -j $([Environment]::ProcessorCount)
           if ($LASTEXITCODE -ne 0) { throw "cmake --build failed: $LASTEXITCODE" }
 
+          cmake --install $BuildDir --prefix "$env:LLAMA_DIR/dist"
+          if ($LASTEXITCODE -ne 0) { throw "cmake --install failed: $LASTEXITCODE" }
+
       - name: ccache stats
         shell: powershell
         run: ccache --show-stats --verbose; $true
 
-      # bin/ holds the CLI/tool executables and shared libs; the Hexagon
-      # HTP skels and signed catalog land under ggml/src/ggml-hexagon/.
+      # dist/bin is a self-contained, runnable layout: all executables, the
+      # ggml/llama DLLs, and the Hexagon HTP skels + signed catalog in one
+      # folder. External redistributables (Adreno OpenCL ICD, OpenMP
+      # runtime) are intentionally excluded — install them from the SDK /
+      # VS redist on the target machine.
       - name: Upload llama.cpp build artifact
         uses: actions/upload-artifact@v7
         with:
           name: llama-cpp-windows-arm64-${{ steps.llama.outputs.sha }}
-          path: |
-            ${{ steps.llama.outputs.dir }}/build-arm64-windows-llvm-release/bin/
-            ${{ steps.llama.outputs.dir }}/build-arm64-windows-llvm-release/ggml/src/ggml-hexagon/libggml-htp-v*.so
-            ${{ steps.llama.outputs.dir }}/build-arm64-windows-llvm-release/ggml/src/ggml-hexagon/libggml-htp.inf
-            ${{ steps.llama.outputs.dir }}/build-arm64-windows-llvm-release/ggml/src/ggml-hexagon/libggml-htp.cat
+          path: ${{ steps.llama.outputs.dir }}/dist/bin/
           retention-days: 7
