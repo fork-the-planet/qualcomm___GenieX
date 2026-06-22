@@ -59,14 +59,14 @@ import Feedback from "/snippets/page-feedback.mdx";
   </Accordion>
 
   <Accordion title="How do I set a Hugging Face token for gated models?">
-    Some Hugging Face models require you to accept a license and authenticate. Set the `HF_TOKEN` environment variable:
+    Some Hugging Face models require you to accept a license and authenticate. Set one of these environment variables:
 
-    - **Windows:** `$env:HF_TOKEN = "hf_..."`
-    - **Linux:** `export HF_TOKEN="hf_..."`
+    - **Windows:** `$env:HF_TOKEN = "hf_..."` (or `$env:GENIEX_HFTOKEN = "hf_..."`)
+    - **Linux:** `export HF_TOKEN="hf_..."` (or `export GENIEX_HFTOKEN="hf_..."`)
 
     Or run `huggingface-cli login` to persist the token to `~/.cache/huggingface/token`.
 
-    Get your token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). For full setup steps, see [Set up a Hugging Face token](/en/models/supported#set-up-a-hugging-face-token).
+    Priority: `GENIEX_HFTOKEN` > `HF_TOKEN` > token file. Get your token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). For full setup steps, see [Set up a Hugging Face token](/en/models/supported#set-up-a-hugging-face-token).
   </Accordion>
 
   <Accordion title="Where's the supported models list?">
