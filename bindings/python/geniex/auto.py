@@ -153,8 +153,7 @@ def _resolve_model_sources(
             bundle_id = (meta or {}).get('model_id')
             if bundle_id and bundle_id != model_name:
                 raise ValueError(
-                    f"model_name '{model_name}' does not match bundle "
-                    f"'model_id={bundle_id}' in {model_name_or_path}"
+                    f"model_name '{model_name}' does not match bundle 'model_id={bundle_id}' in {model_name_or_path}"
                 )
             local_dir = model_name_or_path if os.path.isdir(model_name_or_path) else os.path.dirname(model_name_or_path)
             _mm.pull(model_name, hub='localfs', local_path=os.path.abspath(local_dir))
