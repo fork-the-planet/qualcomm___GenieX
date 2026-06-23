@@ -298,6 +298,15 @@ nav a:has(img.nav-logo) *,
   color: #4a5a75 !important;
 }
 
+.dark header a:has(.nav-logo) *,
+.dark header a:has(img.nav-logo) *,
+.dark nav a:has(.nav-logo) *,
+.dark nav a:has(img.nav-logo) *,
+.dark #navbar a:has(.nav-logo) *,
+.dark #navbar a:has(img.nav-logo) * {
+  color: rgb(var(--gray-200)) !important;
+}
+
 .feedback-wrapper {
   display: flex;
   align-items: center;

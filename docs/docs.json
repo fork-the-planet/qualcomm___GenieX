@@ -3,8 +3,8 @@
   "theme": "mint",
   "name": "Qualcomm® AI Hub Workbench",
   "colors": {
-    "primary": "#4a5a75",
-    "light": "#4a5a75",
+    "primary": "#2a2aea",
+    "light": "#2a2aea",
     "dark": "#99b3fd"
   },
   "styling": {
