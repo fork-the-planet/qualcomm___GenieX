@@ -330,7 +330,7 @@ func (v *VLM) ApplyChatTemplate(input VlmApplyChatTemplateInput) (*VlmApplyChatT
 }
 
 func (v *VLM) Generate(input VlmGenerateInput) (*VlmGenerateOutput, error) {
-	slog.Debug("Generate called", "promptLen", len(input.PromptUTF8))
+	slog.Debug("Generate called", "promptLen", len(input.PromptUTF8), "imageCount", len(input.Config.ImagePaths), "audioCount", len(input.Config.AudioPaths))
 
 	cInput := input.toCPtr()
 	defer freeVlmGenerateInput(cInput)
