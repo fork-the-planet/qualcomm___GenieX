@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Before you begin, make sure you have **Node.js 20 or later** installed.
+Before you begin, make sure you have **Node.js 20–24** installed (Mintlify does not support Node 25+).
 
 <details>
 <summary><strong>Install Node.js (includes npm)</strong></summary>
@@ -10,7 +10,7 @@ Before you begin, make sure you have **Node.js 20 or later** installed.
 **macOS** (via Homebrew):
 
 ```bash
-brew install node
+brew install node@22
 ```
 
 **Windows** (via winget):
