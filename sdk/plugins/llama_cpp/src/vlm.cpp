@@ -209,7 +209,8 @@ int32_t LlamaVlm::generate(const geniex_VlmGenerateInput* input, geniex_VlmGener
             for (int i = 0; i < input->config->image_count; ++i) {
                 if (input->config->image_paths[i]) {
                     mtmd_bitmap* bmp =
-                        mtmd_helper_bitmap_init_from_file(this->ctx_vision, input->config->image_paths[i]);
+                        mtmd_helper_bitmap_init_from_file(this->ctx_vision, input->config->image_paths[i], false)
+                            .bitmap;
                     if (bmp) {
                         bitmaps.push_back(bmp);
                         n_media++;
@@ -231,7 +232,8 @@ int32_t LlamaVlm::generate(const geniex_VlmGenerateInput* input, geniex_VlmGener
             for (int i = 0; i < input->config->audio_count; ++i) {
                 if (input->config->audio_paths[i]) {
                     mtmd_bitmap* bmp =
-                        mtmd_helper_bitmap_init_from_file(this->ctx_vision, input->config->audio_paths[i]);
+                        mtmd_helper_bitmap_init_from_file(this->ctx_vision, input->config->audio_paths[i], false)
+                            .bitmap;
                     if (bmp) {
                         bitmaps.push_back(bmp);
                         n_media++;
