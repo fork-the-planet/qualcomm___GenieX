@@ -51,53 +51,10 @@ geniex infer Qwen/Qwen3-VL-2B-Instruct-GGUF
 
 ## **运行本地模型**
 
-已有模型文件在本地？使用 `geniex pull` 配合 `--local-path` 注册到缓存，然后像其他模型一样运行。
+已有模型文件在本地，或想从 Hugging Face 自行转换模型包？使用 `geniex pull` 配合 `--local-path` 注册到缓存，然后像其他模型一样运行。详见：
 
-### **本地 GGUF 文件**
-
-将 `--local-path` 指向包含 `.gguf` 文件的目录：
-
-<CodeGroup>
-```powershell windows
-geniex pull local/my-model --local-path C:\models\my-model
-geniex infer local/my-model
-```
-
-```bash linux
-geniex pull local/my-model --local-path /home/user/models/my-model
-geniex infer local/my-model
-```
-</CodeGroup>
-
-### **本地 QAIRT 模型包**
-
-将 `--local-path` 指向已解压的模型包目录（包含 `.bin` 分片和 `metadata.json`）：
-
-<CodeGroup>
-```powershell windows
-geniex pull local/my-bundle --local-path C:\models\my-bundle
-geniex infer local/my-bundle
-```
-
-```bash linux
-geniex pull local/my-bundle --local-path /home/user/models/my-bundle
-geniex infer local/my-bundle
-```
-</CodeGroup>
-
-也可以直接从 AI Hub `.zip` 压缩包拉取，无需先解压：
-
-<CodeGroup>
-```powershell windows
-geniex pull local/my-bundle --local-path C:\downloads\model.zip
-```
-
-```bash linux
-geniex pull local/my-bundle --local-path /home/user/downloads/model.zip
-```
-</CodeGroup>
-
-<Note>`geniex pull` 会将模型文件复制到本地缓存。拉取成功后，可以安全删除原始文件以避免保留两份副本。使用 `geniex list` 确认模型已缓存。</Note>
+- [运行本地 Qualcomm AI Engine Direct 模型包](/cn/models/supported#运行本地-qualcomm-ai-engine-direct-模型包) —— 从 Hugging Face 自行转换、已解压的模型包目录，或 AI Hub `.zip`。
+- [运行本地 GGUF 模型](/cn/models/supported#运行本地-gguf-模型) —— 包含 `.gguf` 文件的目录。
 
 ## **下一步**
 

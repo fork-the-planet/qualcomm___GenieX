@@ -15,9 +15,17 @@ GenieX 是为 Qualcomm 平台打造的端侧生成式 AI 推理框架。是在 H
   style={{ borderRadius: '0.5rem' }}
 />
 
-GenieX 通过同一套 SDK 提供五种入口——CLI、Python、Java/Kotlin、Docker 以及兼容 OpenAI 协议的服务器，并由该 SDK 按需分发到 **llama.cpp 运行环境**（覆盖 CPU / GPU / Hexagon HTP 的 GGML 内核）或 **[Qualcomm® AI Engine Direct](https://www.qualcomm.com/developer/software/qualcomm-ai-engine-direct-sdk) 运行环境**（仅 NPU）。同一套 SDK 可运行在 Windows ARM64、Android 与 Linux ARM64 上。
+GenieX 通过同一套 SDK 提供**五种入口**：
 
-<Note>**Qualcomm AI Engine Direct** 是官方名称，它也被称为 *Qualcomm AI Engine Direct SDK*、*Qualcomm AI Runtime*，以及历史上的 *QAIRT*。本文档中我们统一使用该官方名称。</Note>
+- **CLI** —— 直接从终端运行并提供模型服务。
+- **Python** —— 通过 Python SDK 将推理嵌入你的应用。
+- **Java/Kotlin** —— 面向端侧移动应用的 Android SDK。
+- **Docker** —— 用于可复现部署的容器化镜像。
+- **兼容 OpenAI 协议的服务器** —— 可直接替换、供现有 OpenAI 客户端使用的本地服务器。
+
+在底层，该 SDK 会按需分发到 **llama.cpp 运行环境**（覆盖 CPU / GPU / Hexagon HTP 的 GGML 内核）或 **[Qualcomm® AI Engine Direct](https://www.qualcomm.com/developer/software/qualcomm-ai-engine-direct-sdk) 运行环境**（仅 NPU）。同一套 SDK 可运行在 Windows ARM64、Android 与 Linux ARM64 上。
+
+<Note>**Qualcomm AI Engine Direct** 是官方名称，它也被称为 *Qualcomm AI Engine Direct SDK*、*Qualcomm AI Runtime* 以及 *QAIRT*。本文档中我们统一使用该官方名称。</Note>
 
 ## **为什么是两种运行环境？**
 
