@@ -11,7 +11,7 @@
 [![Docs](https://img.shields.io/badge/docs-geniex.aihub.qualcomm.com-2A2AEA?style=flat-square&logo=readthedocs&logoColor=white)](https://geniex.aihub.qualcomm.com)
 [![Release](https://img.shields.io/github/v/release/qualcomm/GenieX?style=flat-square&color=2A2AEA&label=release)](https://github.com/qualcomm/GenieX/releases)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue?style=flat-square)](LICENSE)
-[![Slack](https://img.shields.io/badge/Slack-join%20the%20community-4A154B?style=flat-square&logo=slack&logoColor=white)](https://app.slack.com/client/T06LGRG1MG8/C06KMD15QH4)
+[![Slack](https://img.shields.io/badge/Slack-join%20the%20community-4A154B?style=flat-square&logo=slack&logoColor=white)](https://aihub.qualcomm.com/community/slack)
 
 [**Documentation**](https://geniex.aihub.qualcomm.com) · [**Quickstart**](#quickstart) · [**Models**](#models) · [**Community**](#-community--contact)
 
@@ -212,7 +212,7 @@ Contributions are welcome! Before opening a PR, please read **[CONTRIBUTING.md](
 
 Questions, ideas, or want to show off what you built? Come say hi.
 
-- 💬 [**Slack**](https://app.slack.com/client/T06LGRG1MG8/C06KMD15QH4) — ask questions and chat with the community in real time.
+- 💬 [**Slack**](https://aihub.qualcomm.com/community/slack) — ask questions and chat with the community in real time.
 - 🐛 [**GitHub Issues**](https://github.com/qualcomm/GenieX/issues) — report a bug or request a feature.
 - 🔗 [**LinkedIn**](https://www.linkedin.com/company/qualcommaihub) — follow Qualcomm AI Hub for news and updates.
 
