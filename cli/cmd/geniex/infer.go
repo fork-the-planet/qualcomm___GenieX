@@ -38,6 +38,7 @@ var (
 	input          string
 	systemPrompt   string
 	computeUnit    string
+	slidingWindow  bool
 
 	// sampler config
 	temperature       float32
@@ -85,6 +86,7 @@ var (
 		llmFlags.StringVarP(&input, "input", "i", "", "prompt txt file")
 		llmFlags.StringArrayVarP(&prompt, "prompt", "p", nil, "pass prompt")
 		llmFlags.StringVarP(&tokenFile, "token-file", "t", "", "path to token file (space-separated token IDs) (llama_cpp only)")
+		llmFlags.BoolVarP(&slidingWindow, "sliding-window", "", false, "evict oldest context on overflow instead of erroring (qairt only)")
 		return llmFlags
 	}()
 	vlmFlags = func() *pflag.FlagSet {
@@ -267,6 +269,16 @@ func inferLLM(paths *geniex_sdk.ModelPaths) error {
 
 	spin := render.NewSpinner("loading model...")
 	spin.Start()
+
+	// GENIEX_SLIDING_WINDOW is read by the qairt plugin's generate() on every call; llama_cpp
+	// ignores it (it always context-shifts). Set once, before model creation, so it's in effect
+	// for the whole session.
+	if slidingWindow {
+		if setErr := os.Setenv("GENIEX_SLIDING_WINDOW", "1"); setErr != nil {
+			spin.Stop()
+			return fmt.Errorf("failed to set GENIEX_SLIDING_WINDOW: %w", setErr)
+		}
+	}
 
 	p, err := geniex_sdk.NewLLM(geniex_sdk.LlmCreateInput{
 		ModelName: paths.ModelName,
