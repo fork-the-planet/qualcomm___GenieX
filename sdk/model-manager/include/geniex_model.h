@@ -192,6 +192,14 @@ typedef enum {
     GENIEX_HUB_AIHUB       = 3, /**< Qualcomm AI Hub qairt assets         */
     GENIEX_HUB_VOLCES      = 4, /**< Volces TOS (mainland China preferred) */
     /**
+     * Docker Registry HTTP API V2 — e.g. models published under
+     * https://hub.docker.com/u/ai (`ai/gemma3`, `ai/smollm2`, ...).
+     * GENIEX_HUB_AUTO also resolves here when `model_name` carries an
+     * explicit `docker.io/`, `index.docker.io/`, or
+     * `https://hub.docker.com/r/` prefix.
+     */
+    GENIEX_HUB_DOCKER = 5,
+    /**
      * Local filesystem — not a real hub. The value 127 (0x7F) keeps it
      * well separated from real hub identifiers so future additions won't
      * collide, and signals "this isn't a remote source" at a glance.
@@ -244,7 +252,13 @@ typedef struct {
      */
     uint32_t         struct_size;
     const char*      model_name; /**< "org/repo" or short alias                    */
-    const char*      quant;      /**< Quantization hint. NULL for auto-select      */
+    /**
+     * Quantization hint for HuggingFace / AI Hub pulls (NULL for
+     * auto-select). Doubles as the Docker tag or `sha256:<hex>` digest
+     * when `hub == GENIEX_HUB_DOCKER` (or GENIEX_HUB_AUTO resolves to
+     * Docker); NULL or empty then means the `latest` tag.
+     */
+    const char*      quant;
     geniex_HubSource hub;        /**< Use GENIEX_HUB_AUTO for automatic selection  */
     geniex_Path      local_path; /**< Required only when hub == GENIEX_HUB_LOCALFS */
     /**

@@ -407,7 +407,7 @@ fn is_mmproj_filename(lname: &str) -> bool {
 /// `q4_0` and `Q4_0`); the returned tag is upper-cased so it lines up with
 /// [`QUANT_PRIORITY`]. Returns the highest-priority match if multiple are
 /// present, else the first match, else None.
-fn extract_quant(name: &str) -> Option<String> {
+pub(crate) fn extract_quant(name: &str) -> Option<String> {
     // Walk the (uppercased, ASCII-only) name token by token. A quant tag
     // must sit on a token boundary so that `IQ4_XS` doesn't get scanned as
     // `Q4_XS` from index 1 — we anchor each candidate at a separator.

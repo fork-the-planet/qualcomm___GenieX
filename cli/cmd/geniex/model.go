@@ -43,6 +43,8 @@ func resolveHub() (geniex_sdk.HubSource, error) {
 		return geniex_sdk.HubAIHub, nil
 	case "hf", "huggingface":
 		return geniex_sdk.HubHuggingFace, nil
+	case "docker", "dockerhub":
+		return geniex_sdk.HubDocker, nil
 	case "local", "localfs":
 		if localPath == "" {
 			return 0, fmt.Errorf("local path is required for localfs model hub")
@@ -59,18 +61,31 @@ func pull() *cobra.Command {
 		GroupID: "model",
 		Use:     "pull <model-name>[:<precision>]",
 
-		Short: "Pull model from HuggingFace or Qualcomm AI Hub Models",
-		Long:  "Download and cache a model by name. Append ':<precision>' to pull a specific precision; otherwise you'll be prompted to choose one.",
+		Short: "Pull model from HuggingFace, Qualcomm AI Hub Models, or Docker Hub",
+		Long: "Download and cache a model by name. Append ':<precision>' to pull a specific precision; otherwise you'll be prompted to choose one.\n\n" +
+			"Docker Hub models (e.g. docker.io/ai/gemma3, or ai/gemma3 with --model-hub docker) " +
+			"use ':<tag>' instead of a precision — omit it to pull the 'latest' tag.",
 	}
 
 	pullCmd.Args = cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs)
 
 	pullCmd.Flags().SortFlags = false
-	pullCmd.Flags().StringVarP(&modelHub, "model-hub", "", "", "specify model hub to use: aihub|hf|localfs")
+	pullCmd.Flags().StringVarP(&modelHub, "model-hub", "", "", "specify model hub to use: aihub|hf|docker|localfs")
 	pullCmd.Flags().StringVarP(&localPath, "local-path", "", "", "[localfs] path to local directory or aihub zip file")
 	pullCmd.Flags().StringVarP(&modelType, "model-type", "", "", "specify model type to use: [llm|vlm]")
 
 	pullCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		hub, err := resolveHub()
+		if err != nil {
+			return err
+		}
+		// Docker Hub's ':<tag>' is a case-sensitive registry reference, not
+		// a GGUF quantization label — don't upper-case it like the other
+		// hubs' precision suffix.
+		if hub == geniex_sdk.HubDocker || geniex_sdk.IsDockerHubReference(args[0]) {
+			name, tag := geniex_sdk.SplitNamePrecisionCaseSensitive(args[0])
+			return pullModel(cmd.Context(), name, tag)
+		}
 		name, quant := geniex_sdk.SplitNamePrecision(args[0])
 		return pullModel(cmd.Context(), name, quant)
 	}
@@ -400,8 +415,11 @@ func pullModel(ctx context.Context, name string, quant string) error {
 	}
 
 	// No precision requested: query the remote candidates and let the user
-	// pick (skipped for localfs, which has no remote listing).
-	if quant == "" && hub != geniex_sdk.HubLocalFS {
+	// pick (skipped for localfs, which has no remote listing, and for
+	// Docker Hub, where an empty quant already means "pull the 'latest'
+	// tag" — querying would resolve one tag's manifest and then
+	// mis-feed its GGUF quant label back in as if it were the tag).
+	if quant == "" && hub != geniex_sdk.HubLocalFS && hub != geniex_sdk.HubDocker {
 		spin := render.NewSpinner("fetching available precisions from: " + name)
 		spin.Start()
 		q, err := geniex_sdk.ModelQuery(in)

@@ -40,6 +40,7 @@ use crate::manifest_builder::ManifestHint;
 use crate::mapping::canonicalize_model_name;
 use crate::resume;
 use crate::source::ai_hub::{AiHubConfig, AiHubSource};
+use crate::source::dockerhub::DockerHubSource;
 use crate::source::hf::HfSource;
 use crate::source::localfs::LocalFsSource;
 use crate::source::ModelSource;
@@ -76,6 +77,12 @@ pub enum PullIntent {
     AiHub {
         display_name: String,
         chipset: String,
+    },
+    DockerHub {
+        /// "ai/gemma3" — no registry host prefix.
+        repo: String,
+        /// Tag or `sha256:<hex>` digest; empty means `"latest"`.
+        reference: String,
     },
 }
 
@@ -238,6 +245,10 @@ pub(crate) fn build_source(
                 cfg,
                 transport,
             );
+            Ok(Box::new(src))
+        }
+        PullIntent::DockerHub { repo, reference } => {
+            let src = DockerHubSource::new(repo.clone(), reference.clone(), transport)?;
             Ok(Box::new(src))
         }
     }

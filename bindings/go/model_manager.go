@@ -62,6 +62,12 @@ func ParseModelType(s string) (ModelType, bool) {
 // so its scheme colon isn't mistaken for the precision separator. Bare names are
 // canonicalized by the SDK; this only handles the URL strip + ':' split so
 // callers can pass name and precision to the FFI separately.
+//
+// Do not use this for a Docker Hub reference (see IsDockerHubReference) — the
+// segment after ':' there is a case-sensitive registry tag, not a GGUF
+// quantization label, and upper-casing it (e.g. "latest" -> "LATEST") would
+// send the pull looking for a tag that doesn't exist. Use
+// SplitNamePrecisionCaseSensitive instead.
 func SplitNamePrecision(arg string) (string, string) {
 	arg = strings.TrimPrefix(arg, "https://huggingface.co/")
 	arg = strings.TrimPrefix(arg, "http://huggingface.co/")
@@ -70,6 +76,53 @@ func SplitNamePrecision(arg string) (string, string) {
 		return name, ""
 	}
 	return name, strings.ToUpper(precision)
+}
+
+// dockerHubPrefixes mirrors mapping::DOCKER_HUB_PREFIXES on the Rust side.
+// Kept in sync manually — it's a pure string check the CLI needs before the
+// FFI boundary (to decide which of the two SplitNamePrecision* helpers to
+// use), not something worth its own round-trip through the SDK.
+var dockerHubPrefixes = []string{
+	"docker.io/",
+	"index.docker.io/",
+	"registry-1.docker.io/",
+	"https://hub.docker.com/r/",
+	"http://hub.docker.com/r/",
+	"hub.docker.com/r/",
+}
+
+// IsDockerHubReference reports whether name carries an explicit Docker Hub /
+// registry prefix (e.g. "docker.io/ai/gemma3"). Mirrors
+// mapping::is_docker_hub_reference on the Rust side. A bare "org/repo" name
+// is never a Docker Hub reference by this check — pass --model-hub docker
+// explicitly for those.
+func IsDockerHubReference(name string) bool {
+	lower := strings.ToLower(name)
+	for _, p := range dockerHubPrefixes {
+		if strings.HasPrefix(lower, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// SplitNamePrecisionCaseSensitive is SplitNamePrecision's Docker Hub
+// counterpart: it strips a recognised registry prefix and splits off the
+// ':<tag>' suffix without upper-casing it, since a Docker tag is a
+// case-sensitive registry reference rather than a GGUF quantization label.
+func SplitNamePrecisionCaseSensitive(arg string) (string, string) {
+	lower := strings.ToLower(arg)
+	for _, p := range dockerHubPrefixes {
+		if strings.HasPrefix(lower, p) {
+			arg = arg[len(p):]
+			break
+		}
+	}
+	name, tag, found := strings.Cut(arg, ":")
+	if !found {
+		return name, ""
+	}
+	return name, tag
 }
 
 // HubSource mirrors geniex_HubSource.
@@ -81,6 +134,7 @@ const (
 	HubModelScope  HubSource = C.GENIEX_HUB_MODELSCOPE
 	HubAIHub       HubSource = C.GENIEX_HUB_AIHUB
 	HubVolces      HubSource = C.GENIEX_HUB_VOLCES
+	HubDocker      HubSource = C.GENIEX_HUB_DOCKER
 	HubLocalFS     HubSource = C.GENIEX_HUB_LOCALFS
 )
 

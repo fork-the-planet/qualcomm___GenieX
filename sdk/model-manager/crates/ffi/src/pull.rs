@@ -6,7 +6,10 @@ use std::path::PathBuf;
 
 use model_manager_core::config::StoreConfig;
 use model_manager_core::manifest_builder::ManifestHint;
-use model_manager_core::mapping::{aihub_display_name_from_repo, canonicalize_model_name};
+use model_manager_core::mapping::{
+    aihub_display_name_from_repo, canonicalize_model_name, docker_hub_repo_from_name,
+    is_docker_hub_reference,
+};
 use model_manager_core::pull::{pull_blocking, PullIntent, PullRequest};
 
 use crate::init::{get_store, runtime_handle};
@@ -22,6 +25,9 @@ pub enum GenieXHubSource {
     ModelScope = 2,
     AiHub = 3,
     Volces = 4,
+    /// Docker Registry HTTP API V2 — publicly, models published under
+    /// `hub.docker.com/u/ai` (e.g. `ai/gemma3`).
+    Docker = 5,
     /// Local filesystem — intentionally 127, not 5, to keep "not a real
     /// hub" visually separated from the network hub IDs above.
     LocalFs = 127,
@@ -160,6 +166,26 @@ pub(crate) unsafe fn extract_name_and_intent(
     let inp = &*input;
 
     let raw_model_name = cstr_to_str(inp.model_name).ok_or(GENIEX_ERROR_COMMON_INVALID_INPUT)?;
+
+    // Docker Hub routing is decided on the *original* string, before the
+    // generic HF/AI-Hub canonicalisation below would discard the
+    // hub-identifying prefix — mirrors docker/model-runner's
+    // `IsHuggingFaceReference(originalReference)` check ahead of its own
+    // name normalisation. `--model-hub docker` (or GENIEX_HUB_DOCKER) works
+    // on a bare "org/repo" too, since the hub is then already unambiguous.
+    let use_docker = matches!(inp.hub, GenieXHubSource::Docker)
+        || (matches!(inp.hub, GenieXHubSource::Auto) && is_docker_hub_reference(raw_model_name));
+    if use_docker {
+        let repo = canonicalize_model_name(&docker_hub_repo_from_name(raw_model_name));
+        // `quant` doubles as the Docker tag/digest for this hub (no GGUF
+        // quant filtering happens for Docker pulls); empty means "latest".
+        let reference = cstr_to_str(inp.quant)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("latest")
+            .to_string();
+        return Ok((repo.clone(), PullIntent::DockerHub { repo, reference }));
+    }
+
     // Bare names (no '/') are treated as AI Hub model ids and stored under
     // `qualcomm/<name>`; anything with '/' is passed through.
     let model_name = canonicalize_model_name(raw_model_name);
