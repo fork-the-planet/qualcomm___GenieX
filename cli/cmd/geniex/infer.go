@@ -117,16 +117,7 @@ func infer() *cobra.Command {
 	inferCmd.SetUsageFunc(flagGroupedUsage)
 
 	inferCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		// Docker Hub's ':<tag>' is a case-sensitive registry reference, not
-		// a GGUF quantization label — don't upper-case it like the other
-		// hubs' precision suffix (see pull()'s RunE for the pull command's
-		// equivalent check).
-		var name, precision string
-		if geniex_sdk.IsDockerHubReference(args[0]) {
-			name, precision = geniex_sdk.SplitNamePrecisionCaseSensitive(args[0])
-		} else {
-			name, precision = geniex_sdk.SplitNamePrecision(args[0])
-		}
+		name, precision := geniex_sdk.SplitNamePrecision(args[0])
 
 		paths, err := ensureModelAvailable(cmd.Context(), name, precision)
 		if err != nil {

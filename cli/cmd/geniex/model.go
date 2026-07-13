@@ -75,17 +75,6 @@ func pull() *cobra.Command {
 	pullCmd.Flags().StringVarP(&modelType, "model-type", "", "", "specify model type to use: [llm|vlm]")
 
 	pullCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		hub, err := resolveHub()
-		if err != nil {
-			return err
-		}
-		// Docker Hub's ':<tag>' is a case-sensitive registry reference, not
-		// a GGUF quantization label — don't upper-case it like the other
-		// hubs' precision suffix.
-		if hub == geniex_sdk.HubDocker || geniex_sdk.IsDockerHubReference(args[0]) {
-			name, tag := geniex_sdk.SplitNamePrecisionCaseSensitive(args[0])
-			return pullModel(cmd.Context(), name, tag)
-		}
 		name, quant := geniex_sdk.SplitNamePrecision(args[0])
 		return pullModel(cmd.Context(), name, quant)
 	}
