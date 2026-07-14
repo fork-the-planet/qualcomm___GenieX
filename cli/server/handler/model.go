@@ -65,7 +65,7 @@ func RetrieveModel(c *gin.Context) {
 			return
 		}
 		quant = precisions[0]
-	} else if !slices.Contains(m.Precisions, quant) {
+	} else if !slices.ContainsFunc(m.Precisions, func(p string) bool { return strings.EqualFold(p, quant) }) {
 		c.JSON(http.StatusNotFound, nil)
 		return
 	}

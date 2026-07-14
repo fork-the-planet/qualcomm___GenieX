@@ -10,11 +10,13 @@
 //! just moves bytes from each [`BytesSource`] into `dest_dir/<name>`.
 //!
 //! Implementations live beside this file: [`hf`] (HuggingFace REST API
-//! with siblings), [`localfs`] (on-disk directory walk), and
-//! [`ai_hub`] (Qualcomm AI Hub S3 protojson chain plus remote ZIP64
-//! central-dir parse).
+//! with siblings), [`localfs`] (on-disk directory walk), [`ai_hub`]
+//! (Qualcomm AI Hub S3 protojson chain plus remote ZIP64 central-dir
+//! parse), and [`dockerhub`] (Docker Registry HTTP API V2, for models
+//! published under `hub.docker.com/u/ai` and similar).
 
 pub mod ai_hub;
+pub mod dockerhub;
 pub mod hf;
 pub mod local_kind;
 pub mod localfs;

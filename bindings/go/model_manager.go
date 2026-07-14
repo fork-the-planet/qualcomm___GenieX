@@ -57,11 +57,14 @@ func ParseModelType(s string) (ModelType, bool) {
 	}
 }
 
-// SplitNamePrecision splits "name[:precision]" into (name, precision),
-// upper-casing the precision. A pasted HuggingFace URL prefix is stripped first
-// so its scheme colon isn't mistaken for the precision separator. Bare names are
-// canonicalized by the SDK; this only handles the URL strip + ':' split so
-// callers can pass name and precision to the FFI separately.
+// SplitNamePrecision splits "name[:precision]" into (name, precision). A pasted
+// HuggingFace URL prefix is stripped first so its scheme colon isn't mistaken
+// for the precision separator. Name canonicalization, precision case-folding
+// (GGUF quant labels are matched upper-cased), and hub routing all happen in
+// the SDK across the FFI boundary — including Docker Hub, where the suffix is a
+// case-sensitive registry tag the SDK deliberately leaves untouched. This only
+// does the URL strip + ':' split so callers can pass the two to the FFI
+// separately.
 func SplitNamePrecision(arg string) (string, string) {
 	arg = strings.TrimPrefix(arg, "https://huggingface.co/")
 	arg = strings.TrimPrefix(arg, "http://huggingface.co/")
@@ -69,7 +72,7 @@ func SplitNamePrecision(arg string) (string, string) {
 	if !found || precision == "" {
 		return name, ""
 	}
-	return name, strings.ToUpper(precision)
+	return name, precision
 }
 
 // HubSource mirrors geniex_HubSource.
@@ -81,8 +84,23 @@ const (
 	HubModelScope  HubSource = C.GENIEX_HUB_MODELSCOPE
 	HubAIHub       HubSource = C.GENIEX_HUB_AIHUB
 	HubVolces      HubSource = C.GENIEX_HUB_VOLCES
+	HubDocker      HubSource = C.GENIEX_HUB_DOCKER
 	HubLocalFS     HubSource = C.GENIEX_HUB_LOCALFS
 )
+
+// ResolveHub reports the hub a pull/query will actually use for name given the
+// requested hub. HubAuto resolves to HubDocker when name carries a Docker Hub
+// prefix (docker.io/…); every other input is returned unchanged. The prefix
+// table lives in the SDK, so callers must not re-derive it. No network I/O.
+func ResolveHub(name string, hub HubSource) (HubSource, error) {
+	cName := cStringIfSet(name)
+	defer cFreeIfSet(unsafe.Pointer(cName))
+	var out C.geniex_HubSource
+	if res := C.geniex_model_resolve_hub(cName, C.geniex_HubSource(hub), &out); res != C.GENIEX_SUCCESS {
+		return hub, modelError(res)
+	}
+	return HubSource(out), nil
+}
 
 // FileProgress mirrors geniex_FileProgress.
 type FileProgress struct {

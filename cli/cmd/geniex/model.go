@@ -43,6 +43,8 @@ func resolveHub() (geniex_sdk.HubSource, error) {
 		return geniex_sdk.HubAIHub, nil
 	case "hf", "huggingface":
 		return geniex_sdk.HubHuggingFace, nil
+	case "docker", "dockerhub":
+		return geniex_sdk.HubDocker, nil
 	case "local", "localfs":
 		if localPath == "" {
 			return 0, fmt.Errorf("local path is required for localfs model hub")
@@ -59,14 +61,16 @@ func pull() *cobra.Command {
 		GroupID: "model",
 		Use:     "pull <model-name>[:<precision>]",
 
-		Short: "Pull model from HuggingFace or Qualcomm AI Hub Models",
-		Long:  "Download and cache a model by name. Append ':<precision>' to pull a specific precision; otherwise you'll be prompted to choose one.",
+		Short: "Pull model from HuggingFace, Qualcomm AI Hub Models, or Docker Hub",
+		Long: "Download and cache a model by name. Append ':<precision>' to pull a specific precision; otherwise you'll be prompted to choose one.\n\n" +
+			"Docker Hub models (e.g. docker.io/ai/gemma3, or ai/gemma3 with --model-hub docker) " +
+			"use ':<tag>' instead of a precision — omit it to pull the 'latest' tag.",
 	}
 
 	pullCmd.Args = cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs)
 
 	pullCmd.Flags().SortFlags = false
-	pullCmd.Flags().StringVarP(&modelHub, "model-hub", "", "", "specify model hub to use: aihub|hf|localfs")
+	pullCmd.Flags().StringVarP(&modelHub, "model-hub", "", "", "specify model hub to use: aihub|hf|docker|localfs")
 	pullCmd.Flags().StringVarP(&localPath, "local-path", "", "", "[localfs] path to local directory or aihub zip file")
 	pullCmd.Flags().StringVarP(&modelType, "model-type", "", "", "specify model type to use: [llm|vlm]")
 
@@ -366,6 +370,14 @@ func pullModel(ctx context.Context, name string, quant string) error {
 	if err != nil {
 		return err
 	}
+	// resolveHub() only sees the --model-hub flag; a prefixed name like
+	// docker.io/... still reads as HubAuto here. Ask the SDK for the hub the
+	// pull will actually use so the skip-precision guard below is correct for
+	// prefix auto-routing too, not just an explicit --model-hub docker.
+	effectiveHub, err := geniex_sdk.ResolveHub(name, hub)
+	if err != nil {
+		return err
+	}
 
 	in := geniex_sdk.ModelPullInput{
 		ModelName:   name,
@@ -400,8 +412,11 @@ func pullModel(ctx context.Context, name string, quant string) error {
 	}
 
 	// No precision requested: query the remote candidates and let the user
-	// pick (skipped for localfs, which has no remote listing).
-	if quant == "" && hub != geniex_sdk.HubLocalFS {
+	// pick (skipped for localfs, which has no remote listing, and for
+	// Docker Hub, where an empty quant already means "pull the 'latest'
+	// tag" — querying would resolve one tag's manifest and then
+	// mis-feed its GGUF quant label back in as if it were the tag).
+	if quant == "" && effectiveHub != geniex_sdk.HubLocalFS && effectiveHub != geniex_sdk.HubDocker {
 		spin := render.NewSpinner("fetching available precisions from: " + name)
 		spin.Start()
 		q, err := geniex_sdk.ModelQuery(in)

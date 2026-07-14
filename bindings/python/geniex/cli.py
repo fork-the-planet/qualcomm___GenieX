@@ -94,12 +94,21 @@ def _ensure_downloaded(
     if hub in ('localfs', 'local') and not local_path:
         raise SystemExit('error: --local-path is required when --hub localfs')
 
+    # A prefixed name (docker.io/…) auto-routes to Docker Hub inside the SDK
+    # even when --hub is left at 'auto', so ask the SDK for the effective hub
+    # rather than trusting the flag string — otherwise Docker Hub pulls fall
+    # into ensure_cached's GGUF-quant query and mis-feed a quant label as a tag.
+    is_docker = _mm.resolve_effective_hub(model, hub) == _mm.GENIEX_HUB_DOCKER
+
     result: dict = {}
     printer = _progress.default_progress_printer()
 
     def _worker():
         try:
-            if hub in ('aihub', 'localfs', 'local'):
+            # aihub/localfs need their extra args; docker's ':<tag>' is a
+            # registry reference, not a GGUF quant, so it skips ensure_cached's
+            # quant-resolving query. All pull directly.
+            if is_docker or hub in ('aihub', 'localfs', 'local'):
                 _mm.pull(
                     model,
                     precision=quant,
@@ -496,7 +505,7 @@ def _cmd_rm(args: argparse.Namespace) -> int:
 def _add_hub_args(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         '--hub',
-        choices=['auto', 'hf', 'huggingface', 'aihub', 'localfs', 'local'],
+        choices=['auto', 'hf', 'huggingface', 'aihub', 'docker', 'dockerhub', 'localfs', 'local'],
         default='auto',
         help='Source hub (default: auto = HuggingFace)',
     )
