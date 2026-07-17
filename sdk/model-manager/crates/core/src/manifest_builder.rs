@@ -88,6 +88,8 @@ pub fn infer_manifest_from_names(
         if lname.ends_with(".gguf") {
             if is_mmproj_filename(&lname) {
                 mmprojs.push(n);
+            } else if lname.contains("mtp") {
+                // TODO: MTP draft models can't load standalone; skip for now.
             } else {
                 let quant = extract_quant(n).unwrap_or_else(|| "default".to_string());
                 ggufs.entry(quant).or_default().push(n);
@@ -723,6 +725,30 @@ mod tests {
         assert!(m.model_file.contains_key("Q4_K_M"));
         assert_eq!(m.mmproj_file.name, "mmproj-F16.gguf");
         assert_eq!(m.model_name, "Repo");
+    }
+
+    #[test]
+    fn skips_mtp_draft_gguf() {
+        // The MTP draft's Q4_0 tag would otherwise win QUANT_PRIORITY over the
+        // base model's Q4_K_XL, but it can't load standalone.
+        let (names, sizes) = sizes_of(&[
+            ("gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf", 2_620_368_960),
+            ("MTP/mtp-gemma-4-E2B-it-Q4_0.gguf", 59_235_648),
+            ("mmproj-F32.gguf", 1_903_027_008),
+        ]);
+        let m = infer_manifest_from_names(
+            "unsloth/gemma-4-E2B-it-qat-GGUF",
+            &names,
+            &sizes,
+            Default::default(),
+        )
+        .unwrap();
+        assert!(m.model_file.contains_key("Q4_K_XL"));
+        assert!(
+            !m.model_file.contains_key("Q4_0"),
+            "MTP draft must not be a selectable quant: {:?}",
+            m.model_file.keys().collect::<Vec<_>>()
+        );
     }
 
     #[test]
